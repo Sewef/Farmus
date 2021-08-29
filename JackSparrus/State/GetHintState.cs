@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,7 +15,10 @@ namespace JackSparrus.State
             base.RunState(window);
 
             Bitmap screenBitmap = WindowManager.CreateScreenBitmap();
+            screenBitmap.Save("screenTestounet.png", ImageFormat.Png);
             window.TreasureHub.UpdateHubFrom(screenBitmap);
+
+            screenBitmap.Dispose();
 
             window.UpdateHubArray();
 

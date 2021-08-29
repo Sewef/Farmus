@@ -62,6 +62,8 @@ namespace JackSparrus
 
         public void UpdateHubFrom(Bitmap screen)
         {
+            List<TreasureRow> previousRows = new List<TreasureRow>(this.Rows);
+
             this.Rows.Clear();
 
             Bitmap startBitmap = screen.Clone(new Rectangle(0, 0, 50, 50), screen.PixelFormat);
@@ -116,7 +118,14 @@ namespace JackSparrus
                     isActiveRow = this.IsFlagFill(flagBitmap);
                 }
 
-                this.Rows.Add(new TreasureRow(rowDirection, rowText, isActiveRow));
+                TreasureRow newRow = new TreasureRow(rowDirection, rowText, isActiveRow);
+                this.Rows.Add(newRow);
+
+                if (isActiveRow && i < previousRows.Count)
+                {
+                    newRow.WebRowText = previousRows[i].WebRowText;
+                    newRow.WebHintPosition = previousRows[i].WebHintPosition;
+                }
 
                 startRow.Y += 31;
 
@@ -250,7 +259,10 @@ namespace JackSparrus
 
         public void ValidateRow(Direction direction, int displacement)
         {
-            int indexCurrentRow = this.Rows.IndexOf(this.GetCurrentTreasureRow());
+            TreasureRow currentRow = this.GetCurrentTreasureRow();
+            int indexCurrentRow = this.Rows.IndexOf(currentRow);
+
+            currentRow.WebHintPosition = this.GetNewPosition(direction, displacement);
 
             Point pointToClick = new Point(this.startFirstRow.X + 288 + 10, this.startFirstRow.Y + indexCurrentRow * 31 + 15);
 
@@ -258,10 +270,35 @@ namespace JackSparrus
 
             WindowManager.ClickOn(pointToClick.X, pointToClick.Y);
 
-            Thread.Sleep(2000);
+            Size screenSize = WindowManager.GetScreenSize();
+            Random rand = new Random();
+            Thread.Sleep(50 + rand.Next(0, 20));
+            WindowManager.MoveMouseTo(screenSize.Width / 2 + rand.Next(-50, 50), screenSize.Height / 2 + rand.Next(-50, 50));
 
             //Bitmap newScreenShot = WindowManager.CreateScreenBitmap();
             //this.UpdateHubFrom(newScreenShot);
+        }
+
+        public Point GetNewPosition(Direction direction, int displacement)
+        {
+            Point previousPosition = this.GetCurrentPosition();
+
+            Point newPosition = TreasureHub.GetNewPosition(direction, previousPosition, displacement);
+            return newPosition;
+        }
+
+        public Point GetCurrentPosition()
+        {
+            TreasureRow currentRow = this.GetCurrentTreasureRow();
+            int indexCurrentRow = this.Rows.IndexOf(currentRow);
+
+            Point currentPosition = this.treasureHuntStart;
+            if (indexCurrentRow > 1)
+            {
+                currentPosition = this.Rows[indexCurrentRow - 1].WebHintPosition;
+            }
+
+            return currentPosition;
         }
 
         public TreasureRow GetCurrentTreasureRow()
@@ -319,6 +356,22 @@ namespace JackSparrus
             {
                 return "";
             }
+        }
+
+        public static Point GetNewPosition(Direction direction, Point position, int nbCase)
+        {
+            switch (direction)
+            {
+                case Direction.UP:
+                    return new Point(position.X, position.Y - nbCase);
+                case Direction.RIGHT:
+                    return new Point(position.X + nbCase, position.Y);
+                case Direction.DOWN:
+                    return new Point(position.X, position.Y + nbCase);
+                case Direction.LEFT:
+                    return new Point(position.X - nbCase, position.Y);
+            }
+            return position;
         }
 
         public static string GetDirectionString(Direction direction)

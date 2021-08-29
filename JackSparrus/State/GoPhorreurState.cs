@@ -26,7 +26,7 @@ namespace JackSparrus.State
             do
             {
                 this.ClickOnNextArea(row.Direction);
-                Thread.Sleep(5000 + rand.Next(0, 500));
+                Thread.Sleep(8000 + rand.Next(0, 500));
 
                 Bitmap areaScreenshot1 = WindowManager.CreateScreenBitmap();
                 WindowManager.OpenClosePlaneBag();
@@ -50,23 +50,30 @@ namespace JackSparrus.State
                     areaPhorreur.top = interestPoint.top - 45;
                     areaPhorreur.bottom = interestPoint.bottom + 45;
 
-                    Bitmap phorreurScreenshot = WindowManager.CreateScreenBitmap(areaPhorreur);
-
-                    if (isTherePhorreur = this.IsTherePhorreur(phorreurScreenshot))
+                    if (isTherePhorreur == false)
                     {
-                        //phorreurScreenshot.Save("Screenshot3.png", ImageFormat.Png);
-                        //Console.WriteLine();
+                        Bitmap phorreurScreenshot = WindowManager.CreateScreenBitmap(areaPhorreur);
 
-                        //string text = window.TreasureHub.GetTextIn(phorreurScreenshot);
+                        if (this.IsTherePhorreur(phorreurScreenshot))
+                        {
+                            //phorreurScreenshot.Save("Screenshot3.png", ImageFormat.Png);
+                            //Console.WriteLine();
 
-                        //Console.WriteLine(text);
+                            //string text = window.TreasureHub.GetTextIn(phorreurScreenshot);
 
-                        window.TreasureHub.ValidateRow(row.Direction, i + 1);
+                            //Console.WriteLine(text);
 
-                        this.NextStateId = "getHint";
+                            window.TreasureHub.ValidateRow(row.Direction, i + 1);
+
+                            Thread.Sleep(2000);
+
+                            this.NextStateId = "getHint";
+
+                            isTherePhorreur = true;
+                        }
+
+                        phorreurScreenshot.Dispose();
                     }
-
-                    phorreurScreenshot.Dispose();
                 }
 
                 areaScreenshot1.Dispose();

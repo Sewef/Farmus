@@ -188,7 +188,7 @@ namespace JackSparrus
             MoveMouseTo(posX, posY);
             WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_LBUTTONDOWN, 0x00000001, CreateLParam(posX, posY));
             Thread.Sleep(100);
-            WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_LBUTTONUP, 0x00000001, CreateLParam(posX + (int)(rand.NextDouble() * 4) - 2, posY + (int)(rand.NextDouble() * 4) - 2));
+            WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_LBUTTONUP, 0x00000001, CreateLParam(posX, posY));
         }
 
         public static void MoveMouseTo(int posX, int posY)

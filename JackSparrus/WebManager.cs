@@ -22,7 +22,7 @@ namespace JackSparrus
             option.AddArgument("--headless");
             this.driver = new FirefoxDriver(option);
 
-            driver.Navigate().GoToUrl("https://dofus-map.com/en/hunt");
+            driver.Navigate().GoToUrl("https://dofus-map.com/fr/hunt");
         }
 
         public int GetHintDistance(Point startPoint, Direction direction, string hint, out string mostAccurateHint)

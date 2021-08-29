@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -15,10 +16,28 @@ namespace JackSparrus.State
 
             TreasureRow row = window.TreasureHub.GetCurrentTreasureRow();
 
-            //window.WebManager.GetHintDistance()
+            Point currentPosition = window.TreasureHub.GetCurrentPosition();
+
+            int nbCaseToMove = window.WebManager.GetHintDistance(currentPosition, row.Direction, row.RowText, out string mostAccurateHint);
+
+            row.WebRowText = mostAccurateHint;
+            row.WebHintPosition = TreasureHub.GetNewPosition(row.Direction, currentPosition, nbCaseToMove);
+            window.UpdateHubArray();
 
             Random rand = new Random();
 
+            for(int i = 0; i < nbCaseToMove; i++)
+            {
+                this.ClickOnNextArea(row.Direction);
+                Thread.Sleep(8000 + rand.Next(0, 500));
+            }
+
+
+            window.TreasureHub.ValidateRow(row.Direction, nbCaseToMove);
+
+            Thread.Sleep(2000);
+
+            this.NextStateId = "getHint";
             //int i = 0;
             //bool isThereHint = false;
             //do
