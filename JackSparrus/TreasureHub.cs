@@ -100,7 +100,8 @@ namespace JackSparrus
                     int newWidth = this.GetWidthTextRow(rowBitmap, i);
                     Bitmap newTextBitmap = rowBitmap.Clone(new Rectangle(0, 0, newWidth, rowBitmap.Height), screen.PixelFormat);
                     //newTextBitmap.Save("test.png", ImageFormat.Png);
-                    rowText = this.tEngine.GetTextFromImage(newTextBitmap).Trim();
+
+                    rowText = GetTextIn(newTextBitmap);
                     newTextBitmap.Dispose();
                 }
 
@@ -310,7 +311,14 @@ namespace JackSparrus
 
         public string GetTextIn(Bitmap image)
         {
-            return this.tEngine.GetTextFromImage(image).Trim();
+            try
+            {
+                return this.tEngine.GetTextFromImage(image).Trim();
+            }
+            catch (System.NullReferenceException)
+            {
+                return "";
+            }
         }
 
         public static string GetDirectionString(Direction direction)
