@@ -27,14 +27,23 @@ namespace JackSparrus
 
         public int GetHintDistance(Point startPoint, Direction direction, string hint, out string mostAccurateHint)
         {           
-            IWebElement queryX = driver.FindElement(By.Id("x"));
+            Console.WriteLine(String.Join("\t", new string[] { startPoint.X.ToString(), startPoint.Y.ToString(), TreasureHub.GetDirectionString(direction) }));
+            /*IWebElement queryX = driver.FindElement(By.Id("x"));
             queryX.SendKeys(startPoint.X.ToString());
 
             IWebElement queryY = driver.FindElement(By.Id("y"));
-            queryY.SendKeys(startPoint.Y.ToString());
-
+            queryY.SendKeys(startPoint.Y.ToString());*/
+            /*
             IWebElement queryDirection = driver.FindElement(By.Id(TreasureHub.GetDirectionString(direction)));
-            queryDirection.Click();
+            Console.WriteLine(queryDirection.Enabled);
+            queryDirection.Click();*/
+
+            IJavaScriptExecutor jsExecuter = (IJavaScriptExecutor)driver;
+            jsExecuter.ExecuteScript(String.Format("document.querySelector('#x').value = {0};", startPoint.X.ToString()));
+            Console.WriteLine(driver.FindElement(By.Id("x")).GetAttribute("value"));
+
+            jsExecuter.ExecuteScript(String.Format("document.querySelector('#y').value = {0};", startPoint.Y.ToString()));
+            Console.WriteLine(driver.FindElement(By.Id("x")).GetAttribute("value"));
 
             IWebElement worldElement = driver.FindElement(By.Id("worldSelection"));
             if(worldElement != null)
@@ -46,10 +55,19 @@ namespace JackSparrus
                 }
             }
 
+            jsExecuter.ExecuteScript(String.Format("setDirection(document.querySelector('#{0}'));", TreasureHub.GetDirectionString(direction)));
+
             IWebElement hintsElement = driver.FindElement(By.Id("hintName"));
             IEnumerable<IWebElement> hints = hintsElement.FindElements(By.TagName("option"));
 
             List<string> hintTexts = hints.Where(pElem => pElem.GetAttribute("value") != "null").Select(pElem => pElem.Text).ToList();
+
+            if (hintTexts.Count == 0)
+            {
+                throw new Exception("Erreur dans la récupération de l'indice en ligne");
+                Environment.Exit(1);
+            }
+
             mostAccurateHint = ReturnMostAccurateString(hint, hintTexts);
 
             new SelectElement(hintsElement).SelectByText(mostAccurateHint);
