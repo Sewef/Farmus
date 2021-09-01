@@ -27,29 +27,40 @@ namespace JackSparrus
 
         public int GetHintDistance(Point startPoint, Direction direction, string hint, out string mostAccurateHint)
         {           
-            IWebElement queryX = driver.FindElement(By.Id("x"));
+            Console.WriteLine(String.Join("\t", new string[] { startPoint.X.ToString(), startPoint.Y.ToString(), TreasureHub.GetDirectionString(direction) }));
+            /*IWebElement queryX = driver.FindElement(By.Id("x"));
             queryX.SendKeys(startPoint.X.ToString());
 
             IWebElement queryY = driver.FindElement(By.Id("y"));
-            queryY.SendKeys(startPoint.Y.ToString());
-
+            queryY.SendKeys(startPoint.Y.ToString());*/
+            /*
             IWebElement queryDirection = driver.FindElement(By.Id(TreasureHub.GetDirectionString(direction)));
-            queryDirection.Click();
+            Console.WriteLine(queryDirection.Enabled);
+            queryDirection.Click();*/
 
-            IWebElement worldElement = driver.FindElement(By.Id("worldSelection"));
-            if(worldElement != null)
-            {
-                IWebElement element = worldElement.FindElements(By.TagName("span")).FirstOrDefault(pElem => pElem.Text == "Amakna");
-                if (element != null)
-                {
-                    element.Click();
-                }
-            }
+            IJavaScriptExecutor jsExecuter = (IJavaScriptExecutor)driver;
+
+            // Prevent world prompt
+            jsExecuter.ExecuteScript("function coordonnatesAreConflictual(x, y, node) { world = 0; return false; }");
+            
+            // Set pos
+            jsExecuter.ExecuteScript(String.Format("document.querySelector('#x').value = {0};", startPoint.X.ToString()));
+            jsExecuter.ExecuteScript(String.Format("document.querySelector('#y').value = {0};", startPoint.Y.ToString()));
+
+            // Set direction
+            jsExecuter.ExecuteScript(String.Format("setDirection(document.querySelector('#{0}'));", TreasureHub.GetDirectionString(direction)));
+
+            // Wait for hints loading
+            while ((long) jsExecuter.ExecuteScript("return document.querySelector(\"#hintName\").length") == 1);
 
             IWebElement hintsElement = driver.FindElement(By.Id("hintName"));
             IEnumerable<IWebElement> hints = hintsElement.FindElements(By.TagName("option"));
 
             List<string> hintTexts = hints.Where(pElem => pElem.GetAttribute("value") != "null").Select(pElem => pElem.Text).ToList();
+
+            if (hintTexts.Count == 0)
+                throw new Exception("Erreur dans la récupération de l'indice en ligne");
+
             mostAccurateHint = ReturnMostAccurateString(hint, hintTexts);
 
             new SelectElement(hintsElement).SelectByText(mostAccurateHint);
