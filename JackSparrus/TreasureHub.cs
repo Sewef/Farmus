@@ -279,6 +279,17 @@ namespace JackSparrus
             //this.UpdateHubFrom(newScreenShot);
         }
 
+        public void ValidateStep()
+        {
+            Point pointToClick = new Point(this.startFirstRow.X + 288 - 5, this.startFirstRow.Y + this.Rows.Count * 31 + 25);
+
+            WindowManager.MoveMouseTo(pointToClick.X, pointToClick.Y);
+
+            WindowManager.ClickOn(pointToClick.X, pointToClick.Y);
+
+            this.Rows.Clear();
+        }
+
         public Point GetNewPosition(Direction direction, int displacement)
         {
             Point previousPosition = this.GetCurrentPosition();
