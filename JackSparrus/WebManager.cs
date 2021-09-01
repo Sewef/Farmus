@@ -39,23 +39,19 @@ namespace JackSparrus
             queryDirection.Click();*/
 
             IJavaScriptExecutor jsExecuter = (IJavaScriptExecutor)driver;
+
+            // Prevent world prompt
+            jsExecuter.ExecuteScript("function coordonnatesAreConflictual(x, y, node) { world = 0; return false; }");
+            
+            // Set pos
             jsExecuter.ExecuteScript(String.Format("document.querySelector('#x').value = {0};", startPoint.X.ToString()));
-            Console.WriteLine(driver.FindElement(By.Id("x")).GetAttribute("value"));
-
             jsExecuter.ExecuteScript(String.Format("document.querySelector('#y').value = {0};", startPoint.Y.ToString()));
-            Console.WriteLine(driver.FindElement(By.Id("x")).GetAttribute("value"));
 
-            IWebElement worldElement = driver.FindElement(By.Id("worldSelection"));
-            if(worldElement != null)
-            {
-                IWebElement element = worldElement.FindElements(By.TagName("span")).FirstOrDefault(pElem => pElem.Text == "Amakna");
-                if (element != null)
-                {
-                    element.Click();
-                }
-            }
-
+            // Set direction
             jsExecuter.ExecuteScript(String.Format("setDirection(document.querySelector('#{0}'));", TreasureHub.GetDirectionString(direction)));
+
+            // Wait for hints loading
+            while ((long) jsExecuter.ExecuteScript("return document.querySelector(\"#hintName\").length") == 1);
 
             IWebElement hintsElement = driver.FindElement(By.Id("hintName"));
             IEnumerable<IWebElement> hints = hintsElement.FindElements(By.TagName("option"));
@@ -63,10 +59,7 @@ namespace JackSparrus
             List<string> hintTexts = hints.Where(pElem => pElem.GetAttribute("value") != "null").Select(pElem => pElem.Text).ToList();
 
             if (hintTexts.Count == 0)
-            {
                 throw new Exception("Erreur dans la récupération de l'indice en ligne");
-                Environment.Exit(1);
-            }
 
             mostAccurateHint = ReturnMostAccurateString(hint, hintTexts);
 
