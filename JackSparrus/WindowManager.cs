@@ -172,13 +172,27 @@ namespace JackSparrus
             Thread.Sleep(3000);
         }
 
-        public static void PressReleaseButton(int button)
+        public static void PressReleaseButton(Keys key)
         {
             IntPtr NULL = new IntPtr(0);
 
-            WindowManager.SendMessage((int)DOFUSPTR, button, (int)Keys.D3, NULL);
+            WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_KEYDOWN, (int)key, NULL);
             Thread.Sleep(100);
-            WindowManager.SendMessage((int)DOFUSPTR, button, (int)Keys.D3, NULL);
+            WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_KEYUP, (int)key, NULL);
+        }
+
+        public static void PressTransparentEntitiesButton()
+        {
+            IntPtr NULL = new IntPtr(0);
+
+            WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_KEYDOWN, (int)Keys.ShiftKey, NULL);
+            Thread.Sleep(100);
+            WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_KEYUP, (int)Keys.ShiftKey, NULL);
+            Thread.Sleep(100);
+            WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_KEYDOWN, (int)Keys.D2, NULL);
+            Thread.Sleep(100);
+            WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_KEYUP, (int)Keys.D2, NULL);
+            Thread.Sleep(100);
         }
 
         public static void ClickOn(int posX, int posY)
@@ -507,6 +521,72 @@ namespace JackSparrus
             //bit5.Save("Screenshot3.png", ImageFormat.Png);
 
             return result;
+        }
+
+        public static void CleanImage(Bitmap image1)
+        {
+            int min = int.MaxValue;
+            int max = int.MinValue;
+
+            for (int i = 0; i < image1.Width; i++)
+            {
+                for (int j = 0; j < image1.Height; j++)
+                {
+                    Color color = image1.GetPixel(i, j);
+
+                    int test = color.R + color.G + color.B;
+
+                    if(min > test)
+                    {
+                        min = test;
+                    }
+
+                    if(max < test)
+                    {
+                        max = test;
+                    }
+                }
+            }
+
+            int mean = (min + max) / 2;
+
+            for (int i = 0; i < image1.Width; i++)
+            {
+                for (int j = 0; j < image1.Height; j++)
+                {
+                    Color color = image1.GetPixel(i, j);
+
+                    int test = color.R + color.G + color.B;
+
+                    if (test < mean)
+                    {
+                        image1.SetPixel(i, j, Color.White);
+                    }
+                    else
+                    {
+                        image1.SetPixel(i, j, Color.Black);
+                    }
+                }
+            }
+        }
+
+        public static Bitmap CreateDiffBitbmap(Bitmap image1, Bitmap image2)
+        {
+            Bitmap returnBitmap = new Bitmap(image1.Width, image1.Height);
+
+            for (int i = 0; i < image1.Width; i++)
+            {
+                for (int j = 0; j < image1.Height; j++)
+                {
+                    Color color1 = image2.GetPixel(i, j);
+                    Color color2 = image1.GetPixel(i, j);
+
+                    Color diff = Color.FromArgb(Math.Abs(color1.R - color2.R), Math.Abs(color1.G - color2.G), Math.Abs(color1.B - color2.B));
+                    returnBitmap.SetPixel(i, j, diff);
+                }
+            }
+
+            return returnBitmap;
         }
 
         private static RECT FindRect(bool[,] matrix, bool[,] alreadyComputedMatrix, int startIndex, int endIndex, int row)

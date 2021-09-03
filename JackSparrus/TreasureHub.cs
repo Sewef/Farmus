@@ -1,4 +1,5 @@
-﻿using Patagames.Ocr;
+﻿using IronOcr;
+using Patagames.Ocr;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -103,7 +104,8 @@ namespace JackSparrus
                     Bitmap newTextBitmap = rowBitmap.Clone(new Rectangle(0, 0, newWidth, rowBitmap.Height), screen.PixelFormat);
                     //newTextBitmap.Save("test.png", ImageFormat.Png);
 
-                    rowText = GetTextIn(newTextBitmap);
+                    rowText = GetIronOCRText(newTextBitmap);
+
                     newTextBitmap.Dispose();
                 }
 
@@ -361,12 +363,35 @@ namespace JackSparrus
         {
             try
             {
+                WindowManager.CleanImage(image);
+
+                image.Save("testet.png", ImageFormat.Png);
+
                 return this.tEngine.GetTextFromImage(image).Trim();
             }
             catch (System.NullReferenceException)
             {
                 return "";
             }
+        }
+
+        public string GetIronOCRText(Bitmap image)
+        {
+            var Ocr = new IronTesseract();
+            Ocr.Language = OcrLanguage.French;
+
+            var result = string.Empty;
+
+            using (var input = new OcrInput())
+            {
+                input.AddImage(image);
+                // Add image filters if needed
+                // Input.Deskew();
+                // Input.DeNoise();
+                result = Ocr.Read(input).Text;
+            }
+
+            return result;
         }
 
         public static Point GetNewPosition(Direction direction, Point position, int nbCase)

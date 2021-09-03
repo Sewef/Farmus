@@ -61,6 +61,11 @@ namespace JackSparrus
 
             mostAccurateHint = ReturnMostAccurateString(hint, hintTexts);
 
+            if(hintTexts.Contains(hint) && mostAccurateHint != hint)
+            {
+                Console.WriteLine();
+            }
+
             new SelectElement(hintsElement).SelectByText(mostAccurateHint);
 
             IWebElement resultElement = driver.FindElement(By.Id("resultDistance"));
