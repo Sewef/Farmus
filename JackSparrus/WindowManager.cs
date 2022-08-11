@@ -60,6 +60,13 @@ namespace JackSparrus
         [DllImport("user32.dll")]
         public static extern bool GetCursorPos(out POINT lpPoint);
 
+
+        [DllImport("user32.dll")]
+        public static extern void mouse_event(int dwFlags, int dx, int dy, int cButtons, int dwExtraInfo);
+
+        public const int MOUSEEVENTF_LEFTDOWN = 0x02;
+        public const int MOUSEEVENTF_LEFTUP = 0x04;
+
         /// <summary>
         /// Struct representing a point.
         /// </summary>
@@ -176,17 +183,15 @@ namespace JackSparrus
 
         public static void ClickOn(int posX, int posY)
         {
-            Random rand = new Random();
-
-            MoveMouseTo(posX, posY);
-            WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_LBUTTONDOWN, 0x00000001, CreateLParam(posX, posY));
-            Thread.Sleep(100);
-            WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_LBUTTONUP, 0x00000001, CreateLParam(posX, posY));
+            SetCursorPos(posX, posY);
+            mouse_event(MOUSEEVENTF_LEFTDOWN, posX, posY, 0, 0);
+            mouse_event(MOUSEEVENTF_LEFTUP, posX, posY, 0, 0);
+            return;
         }
 
         public static void MoveMouseTo(int posX, int posY)
         {
-
+            
             float time = 0;
             float maxTime = 500;
             Random rand = new Random();
@@ -215,6 +220,7 @@ namespace JackSparrus
                 time += sleepTime;
                 Thread.Sleep(sleepTime);
             } while (Math.Abs(mousePos.X - posX) > 2 || Math.Abs(mousePos.X - posX) > 2);
+            
         }
 
         private static IntPtr CreateLParam(int LoWord, int HiWord)

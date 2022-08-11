@@ -30,7 +30,6 @@ namespace JackSparrus.State
             {
                 this.ClickOnNextArea(row.Direction);
                 Thread.Sleep(5000);
-                //Thread.Sleep(8000 + rand.Next(0, 500));
             }
 
 
@@ -39,18 +38,6 @@ namespace JackSparrus.State
             Thread.Sleep(2000);
 
             this.NextStateId = "getHint";
-            //int i = 0;
-            //bool isThereHint = false;
-            //do
-            //{
-            //    this.ClickOnNextArea(row.Direction);
-            //    Thread.Sleep(5000 + rand.Next(0, 500));
-
-
-
-            //    i++;
-            //}
-            //while (isThereHint == false && i < 10);
         }
     }
 }

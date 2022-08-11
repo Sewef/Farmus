@@ -27,7 +27,6 @@ namespace JackSparrus.State
             {
                 this.ClickOnNextArea(row.Direction);
                 Thread.Sleep(5000 + rand.Next(0, 500));
-                //Thread.Sleep(8000 + rand.Next(0, 500));
 
                 MoveMouseTo(0, 0); // Prevent HUD on screenshot
                 Bitmap areaScreenshot1 = WindowManager.CreateScreenBitmap();
@@ -42,7 +41,9 @@ namespace JackSparrus.State
                 List<POINT> interestPoints =  WindowManager.FindInterestPoints(areaScreenshot1, areaScreenshot2);
                 foreach(POINT point in interestPoints)
                 {
-                    WindowManager.MoveMouseTo(point.X, point.Y);
+                    SetCursorPos(point.X, point.Y); // Need faster move
+                    //WindowManager.MoveMouseTo(point.X, point.Y);
+                    Thread.Sleep(250);
                     
                     RECT areaPhorreur = new RECT();
                     areaPhorreur.x1 = point.X - 45;
@@ -56,6 +57,8 @@ namespace JackSparrus.State
 
                         if (this.IsTherePhorreur(phorreurScreenshot))
                         {
+                            // TODO : Check current phorreur with hint
+
                             //phorreurScreenshot.Save("Screenshot3.png", ImageFormat.Png);
                             //Console.WriteLine();
 
@@ -74,6 +77,8 @@ namespace JackSparrus.State
 
                         phorreurScreenshot.Dispose();
                     }
+
+                    if (isTherePhorreur) break;
                 }
 
                 areaScreenshot1.Dispose();
