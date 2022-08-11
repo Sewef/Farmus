@@ -29,7 +29,8 @@ namespace JackSparrus.State
             for(int i = 0; i < nbCaseToMove; i++)
             {
                 this.ClickOnNextArea(row.Direction);
-                Thread.Sleep(8000 + rand.Next(0, 500));
+                Thread.Sleep(5000);
+                //Thread.Sleep(8000 + rand.Next(0, 500));
             }
 
 

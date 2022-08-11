@@ -47,9 +47,10 @@ namespace JackSparrus.State
                     break;
             }
 
-            WindowManager.MoveMouseTo(pointToClick.X, pointToClick.Y);
-            Thread.Sleep(100 + rand.Next(0, 20));
+            /*WindowManager.MoveMouseTo(pointToClick.X, pointToClick.Y);
+            Thread.Sleep(100 + rand.Next(0, 20));*/
             WindowManager.ClickOn(pointToClick.X, pointToClick.Y);
+
             //Thread.Sleep(300 + rand.Next(0, 20));
             //WindowManager.ClickOn(pointToClick.X + 2, pointToClick.Y + 2);
             //Thread.Sleep(300 + rand.Next(0, 20));
