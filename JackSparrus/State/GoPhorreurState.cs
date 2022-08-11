@@ -26,16 +26,22 @@ namespace JackSparrus.State
             do
             {
                 this.ClickOnNextArea(row.Direction);
-                Thread.Sleep(8000 + rand.Next(0, 500));
+                Thread.Sleep(5000 + rand.Next(0, 500));
+                //Thread.Sleep(8000 + rand.Next(0, 500));
 
                 Bitmap areaScreenshot1 = WindowManager.CreateScreenBitmap();
-                WindowManager.OpenClosePlaneBag();
+
+                // Shift + é and find the differences
+                WindowManager.ToggleTransparency();
+
                 Bitmap areaScreenshot2 = WindowManager.CreateScreenBitmap();
                 //this.ClickOnNextArea(TreasureHub.GetReverseDirection(row.Direction));
                 //Thread.Sleep(2000 + rand.Next(0, 500));
                 //this.ClickOnNextArea(row.Direction);
                 //Thread.Sleep(2000 + rand.Next(0, 500));
                 //Bitmap bitmap2 = WindowManager.CreateScreenBitmap();
+
+                WindowManager.ToggleTransparency();
 
                 List<RECT> interestPoints =  WindowManager.FindInterestPoints(areaScreenshot1, areaScreenshot2);
                 foreach(RECT interestPoint in interestPoints)

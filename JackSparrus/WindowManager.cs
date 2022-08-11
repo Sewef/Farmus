@@ -155,21 +155,14 @@ namespace JackSparrus
             return Screen.PrimaryScreen.Bounds.Size;
         }
 
-        public static void OpenClosePlaneBag()
+        public static void ToggleTransparency()
         {
             IntPtr NULL = new IntPtr(0);
 
-            WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_KEYDOWN, (int)Keys.H, NULL);
+            WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_KEYDOWN, (int)Keys.F5, NULL);
             Thread.Sleep(100);
-            WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_KEYUP, (int)Keys.H, NULL);
-
-            Thread.Sleep(3000);
-
-            WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_KEYDOWN, (int)Keys.H, NULL);
-            Thread.Sleep(100);
-            WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_KEYUP, (int)Keys.H, NULL);
-
-            Thread.Sleep(3000);
+            WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_KEYUP, (int)Keys.F5, NULL);
+            Thread.Sleep(1000);
         }
 
         public static void PressReleaseButton(int button)
@@ -353,159 +346,128 @@ namespace JackSparrus
             }
         }
 
-        public static List<RECT> FindInterestPoints(Bitmap image1, Bitmap image2)
+        private static readonly List<Color> phorreurColors = new List<Color>
         {
+                Color.FromArgb(203, 205, 154), //Horn light
+                Color.FromArgb(145, 148, 103), //Horn dark
+                Color.FromArgb(49, 89, 77), //Skin light
+                Color.FromArgb(37, 56, 48), //Skin medium
+                Color.FromArgb(34, 66, 59), //Skin dark
+                Color.FromArgb(25, 48, 50), //Skin darkest
+                Color.FromArgb(230, 179, 133), //Light noze
+                Color.FromArgb(166, 107, 53), //Dark noze & belly
+                Color.FromArgb(255, 255, 204), //Eye
+        };
+        public static List<RECT> FindInterestPoints(Bitmap opaqueScreen, Bitmap transpaScreen)
+        {
+            
+
             List<RECT> result = new List<RECT>();
 
-            Bitmap bit3 = new Bitmap(image1.Width, image1.Height);
+            bool[,] matrix = new bool[opaqueScreen.Width, opaqueScreen.Height];
+            Bitmap diffBitmap = new Bitmap(opaqueScreen.Width, opaqueScreen.Height);
 
-            for (int i = 0; i < image1.Width; i++)
+            // Find all differencies
+            Bitmap bit4 = new Bitmap(opaqueScreen.Width, opaqueScreen.Height);
+            for (int x = 300; x < 1600; x++)
             {
-                for (int j = 0; j < image1.Height; j++)
+                for (int y = 20; y < 920; y++)
                 {
-                    Color color1 = image2.GetPixel(i, j);
-                    Color color2 = image1.GetPixel(i, j);
+                    Color color1 = transpaScreen.GetPixel(x, y);
+                    Color color2 = opaqueScreen.GetPixel(x, y);
 
                     Color diff = Color.FromArgb(Math.Abs(color1.R - color2.R), Math.Abs(color1.G - color2.G), Math.Abs(color1.B - color2.B));
-                    bit3.SetPixel(i, j, diff);
-                }
-            }
 
-            bool[,] matrix = new bool[image1.Height, image1.Width];
-
-            for (int j = 0; j < image1.Height; j++)
-            {
-                int indexPresent = -1;
-                for (int i = 0; i < image1.Width; i++)
-                {
-                    Color color = bit3.GetPixel(i, j);
-
-                    if (color.R > 20 || color.G > 20 || color.B > 20)
+                    if (diff.R > 10 || diff.G > 10 || diff.B > 10)
                     {
-
-                        if (indexPresent >= 0 && i - indexPresent < 20)
+                        foreach (Color item in phorreurColors)
                         {
-                            for (int z = 0; z < i - indexPresent; z++)
+                            int distR = Math.Abs(opaqueScreen.GetPixel(x, y).R - item.R);
+                            int distG = Math.Abs(opaqueScreen.GetPixel(x, y).G - item.G);
+                            int distB = Math.Abs(opaqueScreen.GetPixel(x, y).B - item.B);
+                            if (distR + distG + distB < 50)
                             {
-                                matrix[j, indexPresent + z] = true;
+                                matrix[x, y] = true;
+                                bit4.SetPixel(x, y, Color.Red);
                             }
                         }
-
-                        indexPresent = i;
                     }
+                    
+                    matrix[x, y] = true;
+                    diffBitmap.SetPixel(x, y, diff);
                 }
             }
-            //bit6.Save("Screenshot3.png", ImageFormat.Png);
 
-            // Bitmap bit4 = new Bitmap(bit1.Width, bit1.Height);
-            for (int i = 0; i < image1.Width; i++)
-            {
-                int indexPresent = -1;
-                for (int j = 0; j < image1.Height; j++)
-                {
-                    bool color = matrix[j, i];
-
-                    matrix[j, i] = false;
-
-                    //bit4.SetPixel(i, j, Color.Black);
-                    if (color)
+            /*
+                    //Bitmap bit5 = new Bitmap(image1);
+                    for (int j = 0; j < image1.Height; j++)
                     {
-
-                        if (indexPresent >= 0 && j - indexPresent < 30)
+                        for (int i = 0; i < image1.Width; i++)
                         {
-                            for (int z = 0; z < j - indexPresent; z++)
-                            {
-                                matrix[indexPresent + z, i] = true;
+                            bool color = matrix[j, i];
 
-                                //bit4.SetPixel(i, indexPresent + z, Color.Red);
+                            if (alreadyComputedMatrix[j, i] == false && color)
+                            {
+                                int z = 0;
+                                while (z + i < image1.Width && matrix[j, i + z])
+                                {
+                                    z++;
+                                }
+
+                                RECT rectangle = FindRect(matrix, alreadyComputedMatrix, i, i + z - 1, j);
+
+                                if(Math.Abs(rectangle.right - rectangle.left + 1 - 61) < 3)
+                                {
+                                    result.Add(rectangle);
+                                }
+
+                                //if (rectangle.right - rectangle.left + 1 > 20 && rectangle.bottom - rectangle.top + 1 > 20)
+                                //// && rectangle.right - rectangle.left + 1 < 100 && rectangle.bottom - rectangle.top + 1 < 500)
+                                //{
+                                //    if (rectangle.right - rectangle.left + 1 < 300 || rectangle.bottom - rectangle.top + 1 < 300)
+                                //    {
+
+                                //        if (rectangle.right > 280 && rectangle.left + 1 < 1640
+                                //            && rectangle.bottom < 930)
+                                //        {
+                                //            Rectangle rect = new Rectangle(rectangle.left, rectangle.top, rectangle.right - rectangle.left + 1, rectangle.bottom - rectangle.top + 1);
+
+                                //            Rectangle waypoint = new Rectangle(1373, 660, 1443 - 1373, 719 - 660);
+                                //            if (waypoint.IntersectsWith(rect) == false)
+                                //            {
+                                //                //using (Graphics graphics = Graphics.FromImage(bit5))
+                                //                //{
+                                //                //    using (System.Drawing.SolidBrush myBrush = new System.Drawing.SolidBrush(System.Drawing.Color.Red))
+                                //                //    {
+                                //                //        graphics.FillRectangle(myBrush, new Rectangle(rectangle.left, rectangle.top, rectangle.right - rectangle.left + 1, rectangle.bottom - rectangle.top + 1));
+                                //                //        //graphics.FillRectangle(myBrush, new Rectangle(978, 261, 6, 200));
+                                //                //    }
+                                //                //}
+
+                                //                result.Add(rectangle);
+                                //            }
+                                //        }
+                                //    }
+                                //    else
+                                //    {
+                                //        Random rand = new Random();
+
+                                //        int posX = 1373 - (int)rand.NextDouble() * 4;
+                                //        int posY = 660 - (int)rand.NextDouble() * 4;
+
+                                //        MoveMouseTo(posX, posY);
+
+                                //        WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_LBUTTONDOWN, 0x00000001, CreateLParam(posX, posY));
+                                //        Thread.Sleep(100);
+                                //        WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_LBUTTONUP, 0x00000001, CreateLParam(posX + (int)(rand.NextDouble() * 4) - 2, posY + (int)(rand.NextDouble() * 4) - 2));
+                                //    }
+                                //}
                             }
                         }
-
-                        indexPresent = j;
                     }
-                }
-            }
-            //bit4.Save("Screenshot4.png", ImageFormat.Png);
 
-            bool[,] alreadyComputedMatrix = new bool[image1.Height, image1.Width];
-            for (int j = 0; j < image1.Height; j++)
-            {
-                for (int i = 0; i < image1.Width; i++)
-                {
-                    alreadyComputedMatrix[j, i] = false;
-                }
-            }
 
-            //Bitmap bit5 = new Bitmap(image1);
-            for (int j = 0; j < image1.Height; j++)
-            {
-                for (int i = 0; i < image1.Width; i++)
-                {
-                    bool color = matrix[j, i];
-
-                    if (alreadyComputedMatrix[j, i] == false && color)
-                    {
-                        int z = 0;
-                        while (z + i < image1.Width && matrix[j, i + z])
-                        {
-                            z++;
-                        }
-
-                        RECT rectangle = FindRect(matrix, alreadyComputedMatrix, i, i + z - 1, j);
-
-                        if(Math.Abs(rectangle.right - rectangle.left + 1 - 61) < 3)
-                        {
-                            result.Add(rectangle);
-                        }
-
-                        //if (rectangle.right - rectangle.left + 1 > 20 && rectangle.bottom - rectangle.top + 1 > 20)
-                        //// && rectangle.right - rectangle.left + 1 < 100 && rectangle.bottom - rectangle.top + 1 < 500)
-                        //{
-                        //    if (rectangle.right - rectangle.left + 1 < 300 || rectangle.bottom - rectangle.top + 1 < 300)
-                        //    {
-
-                        //        if (rectangle.right > 280 && rectangle.left + 1 < 1640
-                        //            && rectangle.bottom < 930)
-                        //        {
-                        //            Rectangle rect = new Rectangle(rectangle.left, rectangle.top, rectangle.right - rectangle.left + 1, rectangle.bottom - rectangle.top + 1);
-
-                        //            Rectangle waypoint = new Rectangle(1373, 660, 1443 - 1373, 719 - 660);
-                        //            if (waypoint.IntersectsWith(rect) == false)
-                        //            {
-                        //                //using (Graphics graphics = Graphics.FromImage(bit5))
-                        //                //{
-                        //                //    using (System.Drawing.SolidBrush myBrush = new System.Drawing.SolidBrush(System.Drawing.Color.Red))
-                        //                //    {
-                        //                //        graphics.FillRectangle(myBrush, new Rectangle(rectangle.left, rectangle.top, rectangle.right - rectangle.left + 1, rectangle.bottom - rectangle.top + 1));
-                        //                //        //graphics.FillRectangle(myBrush, new Rectangle(978, 261, 6, 200));
-                        //                //    }
-                        //                //}
-
-                        //                result.Add(rectangle);
-                        //            }
-                        //        }
-                        //    }
-                        //    else
-                        //    {
-                        //        Random rand = new Random();
-
-                        //        int posX = 1373 - (int)rand.NextDouble() * 4;
-                        //        int posY = 660 - (int)rand.NextDouble() * 4;
-
-                        //        MoveMouseTo(posX, posY);
-
-                        //        WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_LBUTTONDOWN, 0x00000001, CreateLParam(posX, posY));
-                        //        Thread.Sleep(100);
-                        //        WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_LBUTTONUP, 0x00000001, CreateLParam(posX + (int)(rand.NextDouble() * 4) - 2, posY + (int)(rand.NextDouble() * 4) - 2));
-                        //    }
-                        //}
-                    }
-                }
-            }
-            bit3.Dispose();
-
-            //bit5.Save("Screenshot3.png", ImageFormat.Png);
-
+                     */
             return result;
         }
 
