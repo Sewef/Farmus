@@ -29,32 +29,26 @@ namespace JackSparrus.State
                 Thread.Sleep(5000 + rand.Next(0, 500));
                 //Thread.Sleep(8000 + rand.Next(0, 500));
 
+                MoveMouseTo(0, 0); // Prevent HUD on screenshot
                 Bitmap areaScreenshot1 = WindowManager.CreateScreenBitmap();
 
-                // Shift + é and find the differences
+                // F5 and find the differences
                 WindowManager.ToggleTransparency();
 
                 Bitmap areaScreenshot2 = WindowManager.CreateScreenBitmap();
-                //this.ClickOnNextArea(TreasureHub.GetReverseDirection(row.Direction));
-                //Thread.Sleep(2000 + rand.Next(0, 500));
-                //this.ClickOnNextArea(row.Direction);
-                //Thread.Sleep(2000 + rand.Next(0, 500));
-                //Bitmap bitmap2 = WindowManager.CreateScreenBitmap();
 
                 WindowManager.ToggleTransparency();
 
-                List<RECT> interestPoints =  WindowManager.FindInterestPoints(areaScreenshot1, areaScreenshot2);
-                foreach(RECT interestPoint in interestPoints)
+                List<POINT> interestPoints =  WindowManager.FindInterestPoints(areaScreenshot1, areaScreenshot2);
+                foreach(POINT point in interestPoints)
                 {
-                    Point point = new Point((interestPoint.right + interestPoint.left) / 2, (interestPoint.bottom + interestPoint.top) / 2);
-
                     WindowManager.MoveMouseTo(point.X, point.Y);
-
+                    
                     RECT areaPhorreur = new RECT();
-                    areaPhorreur.left = interestPoint.left - 202;
-                    areaPhorreur.right = interestPoint.right + 202;
-                    areaPhorreur.top = interestPoint.top - 45;
-                    areaPhorreur.bottom = interestPoint.bottom + 45;
+                    areaPhorreur.x1 = point.X - 45;
+                    areaPhorreur.y1 = point.X + 45;
+                    areaPhorreur.x2 = point.Y - 202;
+                    areaPhorreur.y2 = point.Y + 202;
 
                     if (isTherePhorreur == false)
                     {

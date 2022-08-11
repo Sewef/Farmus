@@ -31,10 +31,10 @@ namespace JackSparrus
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
         {
-            public int left;
-            public int top;
-            public int right;
-            public int bottom;
+            public int x1;
+            public int x2;
+            public int y1;
+            public int y2;
         }
 
         [DllImport("User32.dll")]
@@ -120,14 +120,14 @@ namespace JackSparrus
 
         public static Bitmap CreateScreenBitmap(RECT zone)
         {
-            zone.left = Math.Max(0, zone.left);
-            zone.top = Math.Max(0, zone.top);
+            zone.x1 = Math.Max(0, zone.x1);
+            zone.x2 = Math.Max(0, zone.x2);
 
-            zone.right = Math.Min(zone.right, Screen.PrimaryScreen.Bounds.Size.Width - 1);
-            zone.bottom = Math.Min(zone.bottom, Screen.PrimaryScreen.Bounds.Size.Height - 1);
+            zone.y1 = Math.Min(zone.y1, Screen.PrimaryScreen.Bounds.Size.Width - 1);
+            zone.y2 = Math.Min(zone.y2, Screen.PrimaryScreen.Bounds.Size.Height - 1);
 
-            int width = zone.right - zone.left + 1;
-            int height = zone.bottom - zone.top + 1;
+            int width = zone.y1 - zone.x1 + 1;
+            int height = zone.y2 - zone.x2 + 1;
 
 
             SetForegroundWindow(DOFUSPTR);
@@ -140,8 +140,8 @@ namespace JackSparrus
             var gfxScreenshot = Graphics.FromImage(bmpScreenshot);
 
             // Take the screenshot from the upper left corner to the right bottom corner.
-            gfxScreenshot.CopyFromScreen(zone.left,
-                                        zone.top,
+            gfxScreenshot.CopyFromScreen(zone.x1,
+                                        zone.x2,
                                         0,
                                         0,
                                         new Size(width, height),
@@ -358,20 +358,20 @@ namespace JackSparrus
                 Color.FromArgb(166, 107, 53), //Dark noze & belly
                 Color.FromArgb(255, 255, 204), //Eye
         };
-        public static List<RECT> FindInterestPoints(Bitmap opaqueScreen, Bitmap transpaScreen)
+        public static List<POINT> FindInterestPoints(Bitmap opaqueScreen, Bitmap transpaScreen)
         {
-            
+            const int x1 = 320, x2 = 1600, y1 = 20, y2 = 920;
 
-            List<RECT> result = new List<RECT>();
+            List<POINT> result = new List<POINT>();
 
             bool[,] matrix = new bool[opaqueScreen.Width, opaqueScreen.Height];
             Bitmap diffBitmap = new Bitmap(opaqueScreen.Width, opaqueScreen.Height);
 
             // Find all differencies
             Bitmap bit4 = new Bitmap(opaqueScreen.Width, opaqueScreen.Height);
-            for (int x = 300; x < 1600; x++)
+            for (int x = x1; x < x2; x++)
             {
-                for (int y = 20; y < 920; y++)
+                for (int y = y1; y < y2; y++)
                 {
                     Color color1 = transpaScreen.GetPixel(x, y);
                     Color color2 = opaqueScreen.GetPixel(x, y);
@@ -385,7 +385,7 @@ namespace JackSparrus
                             int distR = Math.Abs(opaqueScreen.GetPixel(x, y).R - item.R);
                             int distG = Math.Abs(opaqueScreen.GetPixel(x, y).G - item.G);
                             int distB = Math.Abs(opaqueScreen.GetPixel(x, y).B - item.B);
-                            if (distR + distG + distB < 50)
+                            if (distR + distG + distB < 200)
                             {
                                 matrix[x, y] = true;
                                 bit4.SetPixel(x, y, Color.Red);
@@ -393,81 +393,41 @@ namespace JackSparrus
                         }
                     }
                     
-                    matrix[x, y] = true;
                     diffBitmap.SetPixel(x, y, diff);
                 }
             }
 
-            /*
-                    //Bitmap bit5 = new Bitmap(image1);
-                    for (int j = 0; j < image1.Height; j++)
+            // Try to find the phorreur
+            const int xStep = 88, yStep = 22, checkSize = 10;
+            bool skipFirst = true;
+
+            for (int y = y1 + yStep; y < y2; y += yStep)
+            {
+                skipFirst = !skipFirst;
+
+                for (int x = x1 + (xStep / (skipFirst ? 1 : 2)); x < x2; x += xStep)
+                {
+                    bit4.SetPixel(x, y, Color.Blue);
+
+                    int count = 0;
+                    for (int i = -checkSize; i < checkSize; i++)
                     {
-                        for (int i = 0; i < image1.Width; i++)
+                        for (int j = -checkSize; j < checkSize; j++)
                         {
-                            bool color = matrix[j, i];
-
-                            if (alreadyComputedMatrix[j, i] == false && color)
+                            if (matrix[x + i, y + j])
                             {
-                                int z = 0;
-                                while (z + i < image1.Width && matrix[j, i + z])
-                                {
-                                    z++;
-                                }
-
-                                RECT rectangle = FindRect(matrix, alreadyComputedMatrix, i, i + z - 1, j);
-
-                                if(Math.Abs(rectangle.right - rectangle.left + 1 - 61) < 3)
-                                {
-                                    result.Add(rectangle);
-                                }
-
-                                //if (rectangle.right - rectangle.left + 1 > 20 && rectangle.bottom - rectangle.top + 1 > 20)
-                                //// && rectangle.right - rectangle.left + 1 < 100 && rectangle.bottom - rectangle.top + 1 < 500)
-                                //{
-                                //    if (rectangle.right - rectangle.left + 1 < 300 || rectangle.bottom - rectangle.top + 1 < 300)
-                                //    {
-
-                                //        if (rectangle.right > 280 && rectangle.left + 1 < 1640
-                                //            && rectangle.bottom < 930)
-                                //        {
-                                //            Rectangle rect = new Rectangle(rectangle.left, rectangle.top, rectangle.right - rectangle.left + 1, rectangle.bottom - rectangle.top + 1);
-
-                                //            Rectangle waypoint = new Rectangle(1373, 660, 1443 - 1373, 719 - 660);
-                                //            if (waypoint.IntersectsWith(rect) == false)
-                                //            {
-                                //                //using (Graphics graphics = Graphics.FromImage(bit5))
-                                //                //{
-                                //                //    using (System.Drawing.SolidBrush myBrush = new System.Drawing.SolidBrush(System.Drawing.Color.Red))
-                                //                //    {
-                                //                //        graphics.FillRectangle(myBrush, new Rectangle(rectangle.left, rectangle.top, rectangle.right - rectangle.left + 1, rectangle.bottom - rectangle.top + 1));
-                                //                //        //graphics.FillRectangle(myBrush, new Rectangle(978, 261, 6, 200));
-                                //                //    }
-                                //                //}
-
-                                //                result.Add(rectangle);
-                                //            }
-                                //        }
-                                //    }
-                                //    else
-                                //    {
-                                //        Random rand = new Random();
-
-                                //        int posX = 1373 - (int)rand.NextDouble() * 4;
-                                //        int posY = 660 - (int)rand.NextDouble() * 4;
-
-                                //        MoveMouseTo(posX, posY);
-
-                                //        WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_LBUTTONDOWN, 0x00000001, CreateLParam(posX, posY));
-                                //        Thread.Sleep(100);
-                                //        WindowManager.SendMessage((int)DOFUSPTR, WindowManager.WM_LBUTTONUP, 0x00000001, CreateLParam(posX + (int)(rand.NextDouble() * 4) - 2, posY + (int)(rand.NextDouble() * 4) - 2));
-                                //    }
-                                //}
+                                bit4.SetPixel(x + i, y + j, Color.Purple);
+                                count++;
                             }
+                            else
+                                bit4.SetPixel(x + i, y + j, Color.Green);
                         }
                     }
 
-
-                     */
+                    if (count > 30)
+                        result.Add(new POINT() { X = x, Y = y });
+                }
+            }
             return result;
         }
 
@@ -514,23 +474,23 @@ namespace JackSparrus
             {
                 RECT childRect = FindRect(matrix, alreadyComputedMatrix, minUnderRow, maxUnderRow, row + 1);
 
-                if (childRect.left < min)
+                if (childRect.x1 < min)
                 {
-                    min = childRect.left;
+                    min = childRect.x1;
                 }
 
-                if (childRect.right > max)
+                if (childRect.y1 > max)
                 {
-                    max = childRect.right;
+                    max = childRect.y1;
                 }
 
-                maxRow = childRect.bottom;
+                maxRow = childRect.y2;
             }
 
-            result.left = min;
-            result.right = max;
-            result.top = row;
-            result.bottom = maxRow;
+            result.x1 = min;
+            result.y1 = max;
+            result.x2 = row;
+            result.y2 = maxRow;
 
             return result;
         }
