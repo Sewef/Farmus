@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -38,11 +39,17 @@ namespace JackSparrus
         public MainWindow()
         {
             WindowManager.InitWindowManager();
+            Closing += new CancelEventHandler(MainWindow_Closing);
 
             InitializeComponent();
 
             this.TreasureHub = new TreasureHub();
             this.WebManager = new WebManager();
+        }
+
+        void MainWindow_Closing(object sender, CancelEventArgs e)
+        {
+            this.WebManager.CloseDriver();
         }
 
         public void UpdateHubArray()

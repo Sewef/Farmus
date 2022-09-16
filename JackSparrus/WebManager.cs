@@ -23,6 +23,11 @@ namespace JackSparrus
             driver.Navigate().GoToUrl("https://dofus-map.com/fr/hunt");
         }
 
+        public void CloseDriver()
+        {
+            driver.Quit();
+        }
+
         public int GetHintDistance(Point startPoint, Direction direction, string hint, out string mostAccurateHint)
         {           
             Console.WriteLine(String.Join("\t", new string[] { startPoint.X.ToString(), startPoint.Y.ToString(), TreasureHub.GetDirectionString(direction) }));
