@@ -37,6 +37,9 @@ namespace JackSparrus.State
             else
             {
 
+                window.TreasureHub.ValidateStep();
+
+                //this.NextStateId = "goHint";
             }
         }
     }

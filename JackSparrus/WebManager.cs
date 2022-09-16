@@ -1,12 +1,10 @@
-﻿using HtmlAgilityPack;
-using OpenQA.Selenium;
+﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Support.UI;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -63,20 +61,17 @@ namespace JackSparrus
 
             mostAccurateHint = ReturnMostAccurateString(hint, hintTexts);
 
+            if(hintTexts.Contains(hint) && mostAccurateHint != hint)
+            {
+                Console.WriteLine();
+            }
+
             new SelectElement(hintsElement).SelectByText(mostAccurateHint);
 
             IWebElement resultElement = driver.FindElement(By.Id("resultDistance"));
             string text = resultElement.Text;
 
             return int.Parse(text);
-        }
-
-        private async Task<string> CallUrl(string fullUrl)
-        {
-            HttpClient client = new HttpClient();
-            client.DefaultRequestHeaders.Accept.Clear();
-            var response = client.GetStringAsync(fullUrl);
-            return await response;
         }
 
         //private List<string> ParseHtml(string html)
