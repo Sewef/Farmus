@@ -17,35 +17,31 @@ namespace JackSparrus
         public WebManager()
         {
             FirefoxOptions option = new FirefoxOptions();
-            option.AddArgument("--headless");
-            this.driver = new FirefoxDriver(option);
+            option.AddArgument("-headless");
+
+            var ffds = FirefoxDriverService.CreateDefaultService();
+            ffds.HideCommandPromptWindow = true;
+
+            this.driver = new FirefoxDriver(ffds, option);
 
             driver.Navigate().GoToUrl("https://dofus-map.com/fr/hunt");
+
+            // Prevent world prompt
+            ((IJavaScriptExecutor)driver).ExecuteScript("function coordonnatesAreConflictual(x, y, node) { world = 0; return false; }");
         }
 
         public void CloseDriver()
         {
+            driver.Close();
             driver.Quit();
         }
 
         public int GetHintDistance(Point startPoint, Direction direction, string hint, out string mostAccurateHint)
         {           
             Console.WriteLine(String.Join("\t", new string[] { startPoint.X.ToString(), startPoint.Y.ToString(), TreasureHub.GetDirectionString(direction) }));
-            /*IWebElement queryX = driver.FindElement(By.Id("x"));
-            queryX.SendKeys(startPoint.X.ToString());
-
-            IWebElement queryY = driver.FindElement(By.Id("y"));
-            queryY.SendKeys(startPoint.Y.ToString());*/
-            /*
-            IWebElement queryDirection = driver.FindElement(By.Id(TreasureHub.GetDirectionString(direction)));
-            Console.WriteLine(queryDirection.Enabled);
-            queryDirection.Click();*/
-
+            
             IJavaScriptExecutor jsExecuter = (IJavaScriptExecutor)driver;
 
-            // Prevent world prompt
-            jsExecuter.ExecuteScript("function coordonnatesAreConflictual(x, y, node) { world = 0; return false; }");
-            
             // Set pos
             jsExecuter.ExecuteScript(String.Format("document.querySelector('#x').value = {0};", startPoint.X.ToString()));
             jsExecuter.ExecuteScript(String.Format("document.querySelector('#y').value = {0};", startPoint.Y.ToString()));
@@ -71,12 +67,11 @@ namespace JackSparrus
                 Console.WriteLine();
             }
 
+            // Select hint in the list
             new SelectElement(hintsElement).SelectByText(mostAccurateHint);
 
-            IWebElement resultElement = driver.FindElement(By.Id("resultDistance"));
-            string text = resultElement.Text;
-
-            return int.Parse(text);
+            // Return amount of maps to travel
+            return int.Parse(driver.FindElement(By.Id("resultDistance")).Text);
         }
 
         //private List<string> ParseHtml(string html)
@@ -91,12 +86,12 @@ namespace JackSparrus
         //    }
         //}
 
-        public static string ReturnMostAccurateString(string hint, List<string> strings)
+        public static string ReturnMostAccurateString(string text, List<string> strings)
         {
             List<int> matchList = new List<int>();
             foreach (string Track in strings)
             {
-                matchList.Add(LevenshteinDistance(Track, hint));
+                matchList.Add(LevenshteinDistance(Track, text));
             }
             return strings.ElementAt(matchList.IndexOf(matchList.Min()));
         }
