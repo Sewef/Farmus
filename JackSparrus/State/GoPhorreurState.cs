@@ -22,7 +22,7 @@ namespace JackSparrus.State
 
             int i = 0;
 
-            bool isTherePhorreur = false;
+            bool phorreurFound = false;
             do
             {
                 this.ClickOnNextArea(row.Direction);
@@ -42,16 +42,17 @@ namespace JackSparrus.State
                 foreach(POINT point in interestPoints)
                 {
                     SetCursorPos(point.X, point.Y); // Need faster move
-                    //WindowManager.MoveMouseTo(point.X, point.Y);
                     Thread.Sleep(250);
-                    
-                    RECT areaPhorreur = new RECT();
-                    areaPhorreur.x1 = point.X - 45;
-                    areaPhorreur.y1 = point.X + 45;
-                    areaPhorreur.x2 = point.Y - 202;
-                    areaPhorreur.y2 = point.Y + 202;
 
-                    if (isTherePhorreur == false)
+                    RECT areaPhorreur = new RECT
+                    {
+                        x1 = point.X - 45,
+                        y1 = point.X + 45,
+                        x2 = point.Y - 202,
+                        y2 = point.Y + 202
+                    };
+
+                    if (!phorreurFound)
                     {
                         Bitmap phorreurScreenshot = WindowManager.CreateScreenBitmap(areaPhorreur);
 
@@ -72,13 +73,13 @@ namespace JackSparrus.State
 
                             this.NextStateId = "getHint";
 
-                            isTherePhorreur = true;
+                            phorreurFound = true;
                         }
 
                         phorreurScreenshot.Dispose();
                     }
 
-                    if (isTherePhorreur) break;
+                    if (phorreurFound) break;
                 }
 
                 areaScreenshot1.Dispose();
@@ -86,12 +87,13 @@ namespace JackSparrus.State
 
                 i++;
             }
-            while (isTherePhorreur == false && i < 10);
+            while (phorreurFound == false && i < 10);
         }
 
         private bool IsTherePhorreur(Bitmap phorreurScreenshot)
         {
-            Color colorPhorreur = System.Drawing.ColorTranslator.FromHtml("#FEAD00");
+            // Find that orange font
+            Color colorPhorreur = Color.FromArgb(254, 173, 0);
 
             for (int i = 0; i < phorreurScreenshot.Width; i++)
             {

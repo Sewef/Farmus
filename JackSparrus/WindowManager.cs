@@ -465,14 +465,10 @@ namespace JackSparrus
                     int test = color.R + color.G + color.B;
 
                     if(min > test)
-                    {
                         min = test;
-                    }
 
                     if(max < test)
-                    {
                         max = test;
-                    }
                 }
             }
 
@@ -487,13 +483,9 @@ namespace JackSparrus
                     int test = color.R + color.G + color.B;
 
                     if (test < mean)
-                    {
                         image1.SetPixel(i, j, Color.White);
-                    }
                     else
-                    {
                         image1.SetPixel(i, j, Color.Black);
-                    }
                 }
             }
         }
