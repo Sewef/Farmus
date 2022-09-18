@@ -412,11 +412,11 @@ namespace JackSparrus
             switch (direction)
             {
                 case Direction.UP:
-                    return "top";
+                    return "upwards";
                 case Direction.RIGHT:
                     return "right";
                 case Direction.DOWN:
-                    return "bottom";
+                    return "downwards";
                 case Direction.LEFT:
                     return "left";
             }

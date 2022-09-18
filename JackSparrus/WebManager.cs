@@ -17,17 +17,16 @@ namespace JackSparrus
         public WebManager()
         {
             FirefoxOptions option = new FirefoxOptions();
-            option.AddArgument("-headless");
+            //option.AddArgument("-headless");
 
             var ffds = FirefoxDriverService.CreateDefaultService();
             ffds.HideCommandPromptWindow = true;
 
             this.driver = new FirefoxDriver(ffds, option);
 
-            driver.Navigate().GoToUrl("https://dofus-map.com/fr/hunt");
-
-            // Prevent world prompt
-            ((IJavaScriptExecutor)driver).ExecuteScript("function coordonnatesAreConflictual(x, y, node) { world = 0; return false; }");
+            driver.Navigate().GoToUrl("https://www.dofuspourlesnoobs.com/resolution-de-chasse-aux-tresors.html");
+            //driver.Navigate().GoToUrl("https://dofus-map.com/fr/hunt");
+            //((IJavaScriptExecutor)driver).ExecuteScript("Array.from(document.getElementsByTagName('button')).filter(item => item.getAttribute('mode') == 'primary')[0].click();");
         }
 
         public void CloseDriver()
@@ -39,39 +38,44 @@ namespace JackSparrus
         public int GetHintDistance(Point startPoint, Direction direction, string hint, out string mostAccurateHint)
         {           
             Console.WriteLine(String.Join("\t", new string[] { startPoint.X.ToString(), startPoint.Y.ToString(), TreasureHub.GetDirectionString(direction) }));
-            
+
+            // Prevent world prompt
             IJavaScriptExecutor jsExecuter = (IJavaScriptExecutor)driver;
 
             // Set pos
-            jsExecuter.ExecuteScript(String.Format("document.querySelector('#x').value = {0};", startPoint.X.ToString()));
-            jsExecuter.ExecuteScript(String.Format("document.querySelector('#y').value = {0};", startPoint.Y.ToString()));
+            jsExecuter.ExecuteScript(String.Format("document.getElementsByClassName('huntposx')[0].value = {0};", startPoint.X.ToString()));
+            jsExecuter.ExecuteScript(String.Format("document.getElementsByClassName('huntposy')[0].value = {0};", startPoint.Y.ToString()));
 
             // Set direction
-            jsExecuter.ExecuteScript(String.Format("setDirection(document.querySelector('#{0}'));", TreasureHub.GetDirectionString(direction)));
+            jsExecuter.ExecuteScript(String.Format("document.querySelector('#hunt{0}').click();", TreasureHub.GetDirectionString(direction)));
 
-            // Wait for hints loading
-            while ((long) jsExecuter.ExecuteScript("return document.querySelector(\"#hintName\").length") == 1);
-
-            IWebElement hintsElement = driver.FindElement(By.Id("hintName"));
+            // Select hint
+            IWebElement hintsElement = driver.FindElement(By.Id("clue-choice-select"));
             IEnumerable<IWebElement> hints = hintsElement.FindElements(By.TagName("option"));
 
-            List<string> hintTexts = hints.Where(pElem => pElem.GetAttribute("value") != "null").Select(pElem => pElem.Text).ToList();
+            Dictionary<string, string> hintDict = hints.ToDictionary(x => x.Text, x => x.GetAttribute("value"));
+            List<string> hintTexts = hints.Where(pElem => pElem.GetAttribute("value") != "null" && pElem.GetAttribute("disabled") == null).Select(pElem => pElem.Text).ToList();
 
             if (hintTexts.Count == 0)
                 throw new Exception("Erreur dans la récupération de l'indice en ligne");
 
             mostAccurateHint = ReturnMostAccurateString(hint, hintTexts);
 
-            if(hintTexts.Contains(hint) && mostAccurateHint != hint)
+            if (hintTexts.Contains(hint) && mostAccurateHint != hint)
             {
                 Console.WriteLine();
             }
 
             // Select hint in the list
-            new SelectElement(hintsElement).SelectByText(mostAccurateHint);
+            jsExecuter.ExecuteScript(String.Format("document.getElementById('clue-choice-select').value = {0};", hintDict[mostAccurateHint]));
+
+            // Submit
+            jsExecuter.ExecuteScript("document.getElementsByClassName('clue-search')[0].click();");
+
+            object nb = jsExecuter.ExecuteScript("return document.getElementsByClassName('hunt-result-direction')[0].innerText;");
 
             // Return amount of maps to travel
-            return int.Parse(driver.FindElement(By.Id("resultDistance")).Text);
+            return int.Parse(jsExecuter.ExecuteScript("return document.getElementsByClassName('hunt-result-direction')[0].innerText;").ToString());
         }
 
         //private List<string> ParseHtml(string html)
