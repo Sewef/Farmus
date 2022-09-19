@@ -25,8 +25,35 @@ namespace JackSparrus
             this.driver = new FirefoxDriver(ffds, option);
 
             driver.Navigate().GoToUrl("https://www.dofuspourlesnoobs.com/resolution-de-chasse-aux-tresors.html");
-            //driver.Navigate().GoToUrl("https://dofus-map.com/fr/hunt");
-            //((IJavaScriptExecutor)driver).ExecuteScript("Array.from(document.getElementsByTagName('button')).filter(item => item.getAttribute('mode') == 'primary')[0].click();");
+
+            // Dismiss cookies
+            IJavaScriptExecutor jsExecuter = (IJavaScriptExecutor)driver;
+
+            while (!IsElementReady("return document.getElementsByClassName(' css-1quy71n')[0];"));
+            
+            jsExecuter.ExecuteScript("return document.getElementsByClassName(' css-1quy71n')[0].click();");
+
+            while (IsElementReady("return document.getElementsByClassName(' css-1quy71n')[0];")) ;
+
+            //jsExecuter.ExecuteScript("document.getElementsByClassName(' css-1quy71n')[0].click()");
+
+        }
+
+        private bool IsElementReady(string request)
+        {
+            IJavaScriptExecutor jsExecuter = (IJavaScriptExecutor)driver;
+
+            try
+            {
+                if (jsExecuter.ExecuteScript("return document.getElementsByClassName(' css-1quy71n')[0];") == null)
+                    return false;
+            }
+            catch (StaleElementReferenceException e)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public void CloseDriver()
